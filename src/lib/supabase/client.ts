@@ -611,3 +611,74 @@ export async function adminDelete(kind: AdminKind, id: string): Promise<void> {
   ).filter((r) => r.id !== id);
   saveDemoVenue(venue);
 }
+
+// ---------------------------------------------------------------------------
+// Mobile-friendly auth helpers
+// ---------------------------------------------------------------------------
+
+/** Detects in-app browsers (WhatsApp, Instagram, ...) where Google OAuth often fails. */
+export function isInAppBrowser(): boolean {
+  try {
+    const ua = navigator.userAgent || '';
+    return /Instagram|FBAV|FBAN|FB_IAB|WhatsApp|Telegram|Twitter|Snapchat|TikTok|musical_ly|Line\/|; wv\)|WebView/i.test(
+      ua,
+    );
+  } catch {
+    return false;
+  }
+}
+
+/** Maps raw Supabase/auth errors to plain-language guidance. */
+export function friendlyAuthError(err: unknown): string {
+  const raw = err instanceof Error ? err.message : String(err ?? '');
+  if (!raw) return 'Could not sign you in. Please try again.';
+  const msg = raw.toLowerCase();
+  if (msg.includes('invalid login credentials') || msg.includes('invalid email or password')) {
+    return 'Wrong email or password. Try again, or create an account below.';
+  }
+  if (msg.includes('email not confirmed')) {
+    return 'Please confirm your email first — tap the link we sent you, then sign in.';
+  }
+  if (
+    msg.includes('error sending confirmation') ||
+    msg.includes('error sending magic link') ||
+    msg.includes('error sending email') ||
+    msg.includes('confirmation email')
+  ) {
+    return 'We could not send the confirmation email right now. Wait a minute and try again, or sign in if you already have an account.';
+  }
+  if (msg.includes('user already registered') || msg.includes('already exists')) {
+    return 'An account with this email already exists. Sign in instead.';
+  }
+  if (msg.includes('password') && (msg.includes('short') || msg.includes('weak'))) {
+    return 'Password must be at least 6 characters.';
+  }
+  if (msg.includes('unable to validate email') || msg.includes('invalid email')) {
+    return 'That email address looks invalid.';
+  }
+  if (msg.includes('rate limit') || msg.includes('too many') || msg.includes('over_email_send_rate_limit')) {
+    return 'Too many attempts. Wait a minute and try again.';
+  }
+  if (msg.includes('fetch failed') || msg.includes('failed to fetch') || msg.includes('network')) {
+    return 'Network problem. Check your connection and try again.';
+  }
+  if (msg.includes('pkce') || msg.includes('code verifier') || msg.includes('invalid code') || msg.includes('code challenge')) {
+    return 'Google sign-in was interrupted. Try again in Chrome or Safari (not an in-app browser).';
+  }
+  if (msg.includes('redirect_uri_mismatch') || (msg.includes('redirect') && msg.includes('not allowed'))) {
+    return 'Login redirect was blocked. The site address may not be allow-listed — please contact support.';
+  }
+  if (msg.includes('provider') && (msg.includes('disabled') || msg.includes('not enabled'))) {
+    return 'Google sign-in is not enabled yet. Use email instead for now.';
+  }
+  if (msg.includes('signup') && msg.includes('disabled')) {
+    return 'New sign-ups are disabled. Please contact support.';
+  }
+  if (msg.includes('cancel') || msg.includes('access_denied')) {
+    return 'Sign-in was cancelled. Try again when ready.';
+  }
+  if (msg.includes('disallowed_useragent') || msg.includes('403')) {
+    return 'Google blocked sign-in inside this app\u2019s browser. Open this page in Chrome or Safari and try again.';
+  }
+  return raw.length <= 180 ? raw : 'Could not sign you in. Please try again.';
+}

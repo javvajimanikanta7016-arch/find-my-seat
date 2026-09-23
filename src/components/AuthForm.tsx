@@ -3,6 +3,8 @@ import { useState } from 'react';
 import { useApp } from '../lib/store/appStore';
 import {
   demoSignIn,
+  friendlyAuthError,
+  isInAppBrowser,
   isSupabaseConfigured,
   signInWithGoogle,
   signInWithPassword,
@@ -18,6 +20,7 @@ export function AuthForm() {
   const [showPw, setShowPw] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
+  const [inAppBrowser] = useState(() => isInAppBrowser());
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -36,7 +39,7 @@ export function AuthForm() {
       notify(`Welcome${user.name ? `, ${user.name.split(' ')[0]}` : ''}!`);
       go('home');
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Could not sign you in.');
+      setError(friendlyAuthError(err));
     } finally {
       setBusy(false);
     }
@@ -48,7 +51,7 @@ export function AuthForm() {
     try {
       await signInWithGoogle();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Google sign-in failed.');
+      setError(friendlyAuthError(err));
       setBusy(false);
     }
   };
@@ -148,15 +151,26 @@ export function AuthForm() {
         </button>
 
         {isSupabaseConfigured && (
-          <button type="button" onClick={handleGoogle} className="btn-secondary" disabled={busy}>
-            <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true">
-              <path fill="#4285F4" d="M23.5 12.3c0-.9-.1-1.5-.3-2.3H12v4.5h6.5c-.1 1.1-.8 2.7-2.4 3.8l-.1.1 3.5 2.7.2.1c2.2-2 3.8-5 3.8-8.9z" />
-              <path fill="#34A853" d="M12 24c3.2 0 5.9-1.1 7.9-2.9l-3.8-2.9c-1 .7-2.4 1.2-4.1 1.2-3.1 0-5.8-2.1-6.8-5l-.1.1-3.6 2.8v.1C3.5 21.3 7.5 24 12 24z" />
-              <path fill="#FBBC05" d="M5.2 14.4c-.2-.7-.4-1.5-.4-2.4s.1-1.7.4-2.4l-.1-.1-3.5-2.7-.1.1C.5 8.9 0 10.4 0 12s.5 3.1 1.5 4.5l3.7-2.1z" />
-              <path fill="#EA4335" d="M12 4.7c1.8 0 3 .8 3.7 1.4l3.3-3.2C17.9 1.1 15.2 0 12 0 7.5 0 3.5 2.7 1.5 6.9l3.7 2.9c1-2.9 3.7-5.1 6.8-5.1z" />
-            </svg>
-            Continue with Google
-          </button>
+          <>
+            <button type="button" onClick={handleGoogle} className="btn-secondary" disabled={busy}>
+              <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true">
+                <path fill="#4285F4" d="M23.5 12.3c0-.9-.1-1.5-.3-2.3H12v4.5h6.5c-.1 1.1-.8 2.7-2.4 3.8l-.1.1 3.5 2.7.2.1c2.2-2 3.8-5 3.8-8.9z" />
+                <path fill="#34A853" d="M12 24c3.2 0 5.9-1.1 7.9-2.9l-3.8-2.9c-1 .7-2.4 1.2-4.1 1.2-3.1 0-5.8-2.1-6.8-5l-.1.1-3.6 2.8v.1C3.5 21.3 7.5 24 12 24z" />
+                <path fill="#FBBC05" d="M5.2 14.4c-.2-.7-.4-1.5-.4-2.4s.1-1.7.4-2.4l-.1-.1-3.5-2.7-.1.1C.5 8.9 0 10.4 0 12s.5 3.1 1.5 4.5l3.7-2.1z" />
+                <path fill="#EA4335" d="M12 4.7c1.8 0 3 .8 3.7 1.4l3.3-3.2C17.9 1.1 15.2 0 12 0 7.5 0 3.5 2.7 1.5 6.9l3.7 2.9c1-2.9 3.7-5.1 6.8-5.1z" />
+              </svg>
+              Continue with Google
+            </button>
+            {inAppBrowser && (
+              <p className="rounded-xl border border-amber-400/30 bg-amber-400/5 p-3 text-xs leading-relaxed text-amber-200">
+                You&apos;re opening this inside another app&apos;s browser, where Google sign-in
+                often fails. If it doesn&apos;t work, open this page in{' '}
+                <span className="font-bold">Chrome</span> (Android) or{' '}
+                <span className="font-bold">Safari</span> (iPhone) — usually via the ⋮ / share
+                menu → “Open in browser”.
+              </p>
+            )}
+          </>
         )}
 
         <button

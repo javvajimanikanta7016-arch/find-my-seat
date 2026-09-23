@@ -168,7 +168,29 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     let alive = true;
     getSessionUser()
       .then((u) => {
-        if (alive) setUser(u);
+        if (!alive) return;
+        setUser(u);
+        try {
+          // If we returned from Google OAuth (?code=...) but have no session,
+          // the exchange failed (e.g. in-app browser) — say so plainly.
+          const params = new URLSearchParams(window.location.search);
+          if (params.has('code')) {
+            if (!u) {
+              notify(
+                'Google sign-in could not be completed. Try again in Chrome or Safari (not an in-app browser).',
+              );
+            }
+            params.delete('code');
+            const qs = params.toString();
+            window.history.replaceState(
+              {},
+              '',
+              `${window.location.pathname}${qs ? `?${qs}` : ''}${window.location.hash}`,
+            );
+          }
+        } catch {
+          /* ignore */
+        }
       })
       .catch(() => {
         /* stay signed out */
@@ -179,6 +201,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     return () => {
       alive = false;
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const signOut = useCallback(async () => {
