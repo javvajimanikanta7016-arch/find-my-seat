@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 780" font-family="Arial, Helvetica, sans-serif">
+  <rect width="600" height="780" fill="#ffffff"/>
+  <rect x="0" y="0" width="600" height="96" fill="#1f1f23"/>
+  <text x="32" y="62" fill="#fbbf24" font-size="38" font-weight="bold">BookMyShow M-Ticket</text>
+  <text x="32" y="160" fill="#111111" font-size="40" font-weight="bold">Avengers: Secret Wars (U/A)</text>
+  <text x="32" y="200" fill="#444444" font-size="24">English | 2D</text>
+  <line x1="32" y1="232" x2="568" y2="232" stroke="#cccccc" stroke-width="2" stroke-dasharray="10 8"/>
+  <text x="32" y="286" fill="#111111" font-size="32" font-weight="bold">PVR INOX Example Mall</text>
+  <text x="32" y="322" fill="#444444" font-size="22">Example Mall, Banjara Hills, Hyderabad</text>
+  <line x1="32" y1="354" x2="568" y2="354" stroke="#cccccc" stroke-width="2" stroke-dasharray="10 8"/>
+  <text x="32" y="410" fill="#111111" font-size="30" font-weight="bold">Screen 4</text>
+  <text x="32" y="452" fill="#111111" font-size="30">Wed, 24 Sep 2025 | 07:30 PM</text>
+  <rect x="32" y="492" width="536" height="120" rx="14" fill="#fff7ed" stroke="#f59e0b" stroke-width="3"/>
+  <text x="60" y="542" fill="#92400e" font-size="22" font-weight="bold">SILVER-G</text>
+  <text x="60" y="588" fill="#111111" font-size="40" font-weight="bold">Row G  Seat 18</text>
+  <line x1="32" y1="652" x2="568" y2="652" stroke="#cccccc" stroke-width="2" stroke-dasharray="10 8"/>
+  <text x="32" y="700" fill="#444444" font-size="22">1 Ticket | Booking ID MS9X2KLA</text>
+  <text x="32" y="736" fill="#888888" font-size="18">Sample ticket for the Find My Seat demo</text>
+</svg>

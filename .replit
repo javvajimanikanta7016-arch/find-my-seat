@@ -1,0 +1,6 @@
+run = "npm run dev"
+entrypoint = "src/main.tsx"
+
+[deployment]
+run = "npm run preview"
+build = "npm run build"

@@ -1,0 +1,113 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: dark;
+}
+
+html,
+body {
+  height: 100%;
+}
+
+body {
+  @apply bg-cinema-950 text-zinc-100 antialiased;
+  background-image:
+    radial-gradient(1200px 500px at 50% -10%, rgba(245, 158, 11, 0.08), transparent),
+    radial-gradient(800px 400px at 100% 0%, rgba(220, 38, 38, 0.06), transparent);
+  background-attachment: fixed;
+  font-family: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  -webkit-tap-highlight-color: transparent;
+}
+
+@layer components {
+  .card {
+    @apply rounded-2xl border border-white/10 bg-cinema-800/80 p-4 shadow-xl;
+  }
+  .btn-primary {
+    @apply inline-flex w-full items-center justify-center gap-2 rounded-xl bg-gold-400 px-4 py-3.5 text-base font-bold text-zinc-950 transition hover:bg-gold-300 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50;
+  }
+  .btn-secondary {
+    @apply inline-flex w-full items-center justify-center gap-2 rounded-xl border border-white/15 bg-white/5 px-4 py-3.5 text-base font-semibold text-zinc-100 transition hover:bg-white/10 active:scale-[0.98] disabled:opacity-50;
+  }
+  .btn-danger-ghost {
+    @apply inline-flex items-center justify-center gap-2 rounded-xl px-3 py-2 text-sm font-semibold text-red-300 transition hover:bg-red-500/10;
+  }
+  .btn-ghost {
+    @apply inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold text-zinc-300 transition hover:bg-white/5 hover:text-white;
+  }
+  .input {
+    @apply w-full rounded-xl border border-white/10 bg-cinema-900 px-3.5 py-3 text-base text-zinc-100 outline-none placeholder:text-zinc-500 focus:border-gold-400/60 focus:ring-2 focus:ring-gold-400/20;
+  }
+  select.input {
+    @apply appearance-none;
+  }
+  .label {
+    @apply mb-1.5 block text-xs font-semibold uppercase tracking-wider text-zinc-400;
+  }
+  .chip {
+    @apply inline-flex items-center gap-1 rounded-full border border-white/10 bg-white/5 px-2.5 py-1 text-xs font-medium text-zinc-300;
+  }
+  .section-title {
+    @apply text-sm font-bold uppercase tracking-widest text-zinc-400;
+  }
+}
+
+/* Animated route dashes on the SVG map */
+@keyframes fms-dash {
+  to {
+    stroke-dashoffset: -28;
+  }
+}
+.route-anim {
+  stroke-dasharray: 8 6;
+  animation: fms-dash 1.1s linear infinite;
+}
+
+@keyframes fms-blip {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.3;
+  }
+}
+.animate-blip {
+  animation: fms-blip 1.6s ease-in-out infinite;
+}
+
+@keyframes fms-toast-in {
+  from {
+    transform: translateY(12px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+.toast-in {
+  animation: fms-toast-in 0.22s ease-out;
+}
+
+/* Slim scrollbars */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.18) transparent;
+}
+*::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+*::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.18);
+  border-radius: 999px;
+}
+
+/* QR reader video should fit nicely */
+#fms-qr-reader video {
+  border-radius: 0.75rem;
+  width: 100% !important;
+}
