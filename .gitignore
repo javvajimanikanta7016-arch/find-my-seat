@@ -11,6 +11,9 @@ dist-ssr/
 .env.*
 !.env.example
 
+# vercel
+.vercel/
+
 # logs / editor
 *.log
 .DS_Store
