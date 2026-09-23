@@ -57,10 +57,16 @@ async function check(name, fn) {
 
 const headers = { apikey: anon, Authorization: `Bearer ${anon}` };
 
-await check('REST API reachable', async () => {
-  const r = await fetch(`${url}/rest/v1/`, { headers });
-  if (!r.ok) throw new Error(`HTTP ${r.status} — is the project URL correct?`);
-  return 'connected';
+await check('Project reachable', async () => {
+  const r = await fetch(`${url}/auth/v1/health`, { headers });
+  if (!r.ok) throw new Error(`HTTP ${r.status} — wrong URL or project paused?`);
+  return 'online';
+});
+
+await check('API key accepted', async () => {
+  const r = await fetch(`${url}/rest/v1/theatres?select=id&limit=1`, { headers });
+  if (r.status === 401) throw new Error('key rejected — re-copy the anon public key');
+  return 'valid anon key';
 });
 
 const TABLES = [
@@ -90,16 +96,18 @@ await check('storage bucket: tickets', async () => {
     headers: { ...headers, 'Content-Type': 'application/json' },
     body: JSON.stringify({ prefix: '', limit: 1 }),
   });
+  if (r.status === 401 || r.status === 403) throw new Error('key rejected by the Storage API');
   const body = await r.text().catch(() => '');
   if (/bucket not found/i.test(body)) {
     throw new Error('missing — run migration 001 (it creates the bucket)');
   }
+  if (!r.ok) throw new Error(`HTTP ${r.status}`);
   return 'exists';
 });
 
 await check('seed data: sample theatre', async () => {
   const r = await fetch(`${url}/rest/v1/theatres?select=name&limit=5`, { headers });
-  if (!r.ok) throw new Error('could not query theatres');
+  if (!r.ok) throw new Error('could not query theatres (run the migrations first)');
   const rows = await r.json();
   if (!rows.length) throw new Error('no theatres — run migration 003 seed (or add one in Admin)');
   return rows.map((x) => x.name).join(', ');
