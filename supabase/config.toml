@@ -1,0 +1,4 @@
+project_id = "find-my-seat"
+
+[functions.extract-ticket]
+verify_jwt = true
