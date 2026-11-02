@@ -2,7 +2,8 @@ import { AlertTriangle, Camera, FileImage, Loader2, PencilLine, Sparkles } from 
 import { useRef, useState } from 'react';
 import type { TicketDraft } from '../types';
 import { SAMPLE_TICKET_TEXT } from '../lib/data/sampleTheatre';
-import { extractTicketText, fileToDataUrl, type OcrStage } from '../lib/ocr/ticketOcr';
+import { extractTicketWithGemini } from '../lib/ocr/geminiTicket';
+import { extractTicketText, fileToDataUrl, validateTicketFile, type OcrStage } from '../lib/ocr/ticketOcr';
 import { parseTicketText } from '../lib/ocr/ticketParser';
 import { useApp } from '../lib/store/appStore';
 
@@ -28,7 +29,7 @@ const STAGE_LABEL: Record<OcrStage, string> = {
 };
 
 export function TicketUploader() {
-  const { setDraft, setPendingFile, go, notify, uploadMode } = useApp();
+  const { setDraft, setPendingFile, go, notify, uploadMode, user } = useApp();
   const [busy, setBusy] = useState(false);
   const [stage, setStage] = useState('');
   const [error, setError] = useState('');
@@ -38,23 +39,86 @@ export function TicketUploader() {
 
   const handleFile = async (file: File | undefined) => {
     if (!file || busy) return;
+
+    const validation = validateTicketFile(file);
+    if (!validation.ok) {
+      setError(validation.error || 'This ticket file is not supported.');
+      return;
+    }
+
     setError('');
     setBusy(true);
     setStage('Reading file…');
+
     try {
       const dataUrl = file.type.startsWith('image/') ? await fileToDataUrl(file) : null;
       setPreview(dataUrl);
-      const text = await extractTicketText(file, (s) => setStage(STAGE_LABEL[s]));
-      setStage('Understanding ticket…');
-      if (!text || text.trim().length < 10) {
-        throw new Error("We couldn't read your ticket. Try uploading a clearer image.");
+
+      let parsed: Omit<TicketDraft, 'fileName' | 'fileDataUrl'>;
+      let usedGemini = false;
+      let uncertainFields: string[] = [];
+
+      // Real Supabase users try Gemini first. Demo users keep the local OCR flow.
+      if (user && !user.isDemo) {
+        try {
+          setStage('Asking Gemini to read your ticket…');
+          const result = await extractTicketWithGemini(file);
+          parsed = result.draft;
+          uncertainFields = result.uncertainFields;
+          usedGemini = true;
+
+          // Row and seat are essential for navigation. If Gemini misses either,
+          // use the existing on-device OCR as a second attempt.
+          if (!parsed.row || !parsed.seat) {
+            try {
+              const text = await extractTicketText(file, (s) => setStage(STAGE_LABEL[s]));
+              if (text && text.trim().length >= 10) {
+                const local = parseTicketText(text);
+                parsed = {
+                  ...parsed,
+                  movie: parsed.movie || local.movie,
+                  theatre: parsed.theatre || local.theatre,
+                  screen: parsed.screen || local.screen,
+                  showTime: parsed.showTime || local.showTime,
+                  row: parsed.row || local.row,
+                  seat: parsed.seat || local.seat,
+                  platform: parsed.platform === 'Other' ? local.platform : parsed.platform,
+                  rawText: text,
+                };
+              }
+            } catch {
+              // Keep Gemini's partial result; the user can edit missing fields.
+            }
+          }
+        } catch {
+          // If Gemini is unavailable, retain the existing local OCR experience.
+          setStage('Gemini unavailable. Trying the on-device reader…');
+          const text = await extractTicketText(file, (s) => setStage(STAGE_LABEL[s]));
+          if (!text || text.trim().length < 10) {
+            throw new Error("We couldn't read your ticket. Try uploading a clearer image.");
+          }
+          parsed = parseTicketText(text);
+        }
+      } else {
+        const text = await extractTicketText(file, (s) => setStage(STAGE_LABEL[s]));
+        if (!text || text.trim().length < 10) {
+          throw new Error("We couldn't read your ticket. Try uploading a clearer image.");
+        }
+        parsed = parseTicketText(text);
       }
-      const parsed = parseTicketText(text);
+
       setDraft({ ...parsed, fileName: file.name, fileDataUrl: dataUrl ?? undefined });
       setPendingFile(file);
       go('confirm');
+
       if (!parsed.row || !parsed.seat) {
-        notify("We couldn't identify your seat. Please enter it manually.");
+        notify("We couldn't identify your complete seat. Please double-check and enter it manually.");
+      } else if (usedGemini && uncertainFields.length > 0) {
+        notify('Gemini found some unclear ticket details. Please review every field before confirming.');
+      } else if (usedGemini) {
+        notify('Ticket details extracted with Gemini. Please review them before confirming.');
+      } else if (user && !user.isDemo) {
+        notify('Gemini was unavailable, so we used the on-device reader instead. Please review the details.');
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Something went wrong reading that file.');
