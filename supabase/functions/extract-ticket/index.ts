@@ -131,7 +131,6 @@ Deno.serve(async (req: Request) => {
           generationConfig: {
             responseMimeType: "application/json",
             responseSchema: ticketSchema,
-            temperature: 0,
           },
         }),
         signal: AbortSignal.timeout(45000),
